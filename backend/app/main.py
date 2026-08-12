@@ -45,6 +45,32 @@ def get_users(
     ]
 
 
+@app.get("/users/me")
+def get_current_user(
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    user = db.scalar(
+        select(User).where(User.user_id == current_user_id)
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    return {
+        "user_id": user.user_id,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "email": user.email,
+        "phone_number": user.phone_number,
+        "profile_image": user.profile_image,
+        "is_active": user.is_active,
+    }
+
+
 @app.post("/users/register", status_code=status.HTTP_201_CREATED)
 def register_user(
     user_data: UserCreate,
