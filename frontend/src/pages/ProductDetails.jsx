@@ -1,0 +1,18 @@
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { getProduct } from "../services/productService";
+import { getProductReviews, createReview } from "../services/reviewService";
+import { addCartItem, createCart } from "../services/cartService";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { apiError } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+
+export default function ProductDetails(){
+  const {id}=useParams(); const {user}=useAuth(); const [p,setP]=useState(null),[reviews,setReviews]=useState([]),[loading,setLoading]=useState(true),[review,setReview]=useState(""),[rating,setRating]=useState(5);
+  useEffect(()=>{Promise.all([getProduct(id),getProductReviews(id)]).then(([a,b])=>{setP(a.data);setReviews(Array.isArray(b.data)?b.data:b.data?.items||[])}).catch(()=>{}).finally(()=>setLoading(false))},[id]);
+  const add=async()=>{if(!user){alert("Please login first.");return;}try{let c;try{c=await createCart()}catch{c=await (await import("../services/cartService")).getCart()}await addCartItem({cart_id:c.data?.cart_id,product_id:Number(id),quantity:1});alert("Added to cart.")}catch(e){alert(apiError(e,"Could not add to cart."))}};
+  const submit=async(e)=>{e.preventDefault();try{await createReview({product_id:Number(id),rating,comment:review});setReview("");const r=await getProductReviews(id);setReviews(Array.isArray(r.data)?r.data:r.data?.items||[])}catch(e){alert(apiError(e,"Could not submit review."))}};
+  if(loading)return <LoadingSpinner/>; if(!p)return <div className="container-page py-20 text-center">Product not found.</div>;
+  return <div className="container-page py-10"><Link to="/products" className="text-sm font-semibold text-brand-700">← Back to products</Link><div className="mt-5 grid gap-8 md:grid-cols-2"><div className="card aspect-square overflow-hidden bg-slate-100">{p.image_url?<img src={p.image_url} className="h-full w-full object-cover" alt={p.name}/>:<div className="grid h-full place-items-center text-8xl">🥬</div>}</div><div className="py-2"><p className="text-sm font-bold text-brand-600">PRODUCT</p><h1 className="mt-2 text-4xl font-black">{p.name}</h1><p className="mt-4 text-slate-600">{p.description||"Fresh everyday grocery essential."}</p><div className="mt-6 text-3xl font-black">₹{Number(p.selling_price||0).toFixed(2)} <span className="text-base font-normal text-slate-400 line-through">{p.original_price?`₹${Number(p.original_price).toFixed(2)}`:""}</span></div><p className="mt-2 text-sm text-slate-500">{p.quantity||""} {p.unit||""} · Stock: {p.stock_quantity ?? "—"}</p><button onClick={add} className="btn-primary mt-7 w-full sm:w-auto">Add to cart</button></div></div>
+  <section className="mt-14"><h2 className="text-2xl font-black">Reviews</h2>{user&&<form onSubmit={submit} className="card mt-5 p-5"><div className="flex gap-2"><select className="input max-w-32" value={rating} onChange={e=>setRating(Number(e.target.value))}>{[5,4,3,2,1].map(x=><option key={x} value={x}>{x} stars</option>)}</select><input className="input" placeholder="Share your review..." value={review} onChange={e=>setReview(e.target.value)} required/><button className="btn-primary">Post</button></div></form>}{reviews.length===0?<p className="mt-5 text-slate-500">No reviews yet.</p>:<div className="mt-5 space-y-3">{reviews.map((r,i)=><div className="card p-4" key={r.review_id||i}><b>★ {r.rating}</b><p className="mt-1 text-sm text-slate-600">{r.comment}</p></div>)}</div>}</section></div>
+}

@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
@@ -50,6 +51,16 @@ app = FastAPI(
     description="AI-powered Grocery Shopping Platform",
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root():
@@ -115,6 +126,7 @@ def get_current_user(
 def get_products(
     search: Optional[str] = Query(default=None, min_length=1, max_length=255),
     brand_id: Optional[int] = Query(default=None, ge=1),
+    category_id: Optional[int] = Query(default=None, ge=1),
     min_price: Optional[Decimal] = Query(default=None, ge=0),
     max_price: Optional[Decimal] = Query(default=None, ge=0),
     in_stock: Optional[bool] = None,
@@ -135,6 +147,13 @@ def get_products(
 
     if brand_id is not None:
         query = query.where(Product.brand_id == brand_id)
+
+    if category_id is not None:
+        query = (
+            query.join(ProductCategory, ProductCategory.product_id == Product.product_id)
+            .where(ProductCategory.category_id == category_id)
+            .distinct()
+        )
 
     if min_price is not None:
         query = query.where(Product.selling_price >= min_price)

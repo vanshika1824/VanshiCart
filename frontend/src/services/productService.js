@@ -1,0 +1,16 @@
+import api from "./api";
+export const getProducts = (params) => api.get("/products", { params });
+export const getProduct = (id) => api.get(`/products/${id}`);
+export const createProduct = (data) => api.post("/products", data);
+export const updateProduct = (id, data) => api.put(`/products/${id}`, data);
+export const deactivateProduct = (id) => api.delete(`/products/${id}`);
+export const getCategories = () => api.get("/categories");
+export const createCategory = (data) => api.post("/categories", data);
+export const updateCategory = (id, data) => api.put(`/categories/${id}`, data);
+export const deactivateCategory = (id) => api.delete(`/categories/${id}`);
+export const getBrands = () => api.get("/brands");
+export const createBrand = (data) => api.post("/brands", data);
+export const updateBrand = (id, data) => api.put(`/brands/${id}`, data);
+export const getProductCategories = (id) => api.get(`/products/${id}/categories`);
+export const addProductCategory = (productId, categoryId) => api.post(`/products/${productId}/categories/${categoryId}`);
+export const removeProductCategory = (productId, categoryId) => api.delete(`/products/${productId}/categories/${categoryId}`);

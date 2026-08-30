@@ -1,0 +1,8 @@
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { apiError } from "../services/api";
+
+export default function Login(){const {signIn}=useAuth();const nav=useNavigate(),loc=useLocation();const [form,setForm]=useState({email:"",password:""}),[error,setError]=useState(""),[busy,setBusy]=useState(false);
+const submit=async e=>{e.preventDefault();setBusy(true);setError("");try{await signIn(form);nav(loc.state?.from||"/products",{replace:true})}catch(e){setError(apiError(e,e.message||"Invalid email or password."))}finally{setBusy(false)}};
+return <div className="container-page flex min-h-[70vh] items-center justify-center py-10"><form onSubmit={submit} className="card w-full max-w-md p-7"><h1 className="text-3xl font-black">Welcome back</h1><p className="mt-2 text-sm text-slate-500">Sign in to continue shopping.</p>{error&&<div className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}<label className="mt-6 block text-sm font-semibold">Email<input className="input mt-2" type="email" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label className="mt-4 block text-sm font-semibold">Password<input className="input mt-2" type="password" required value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/></label><button disabled={busy} className="btn-primary mt-6 w-full">{busy?"Signing in...":"Sign in"}</button><p className="mt-5 text-center text-sm text-slate-500">New here? <Link className="font-bold text-brand-700" to="/register">Create an account</Link></p></form></div>}
