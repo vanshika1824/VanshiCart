@@ -4,7 +4,10 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+
+# Load variables from backend/.env
 load_dotenv()
+
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -13,7 +16,9 @@ if not DATABASE_URL:
         "DATABASE_URL is not set. Please check backend/.env"
     )
 
-# Use Psycopg 3 explicitly for PostgreSQL connections.
+
+# Render or other hosts may provide postgresql:// or legacy postgres://
+# Force SQLAlchemy to use Psycopg 3 unless a driver is already specified.
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace(
         "postgres://",
@@ -27,13 +32,15 @@ elif DATABASE_URL.startswith("postgresql://"):
         1,
     )
 
-print("DATABASE URL DIALECT:", DATABASE_URL.split("://")[0])
 
+# Database engine
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
 )
 
+
+# Database session factory
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
