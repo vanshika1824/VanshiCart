@@ -17,6 +17,16 @@ if not DATABASE_URL:
     )
 
 
+# Render provides postgresql://...
+# Force SQLAlchemy to use Psycopg 3.
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "postgresql://",
+        "postgresql+psycopg://",
+        1,
+    )
+
+
 # Database engine
 engine = create_engine(
     DATABASE_URL,
