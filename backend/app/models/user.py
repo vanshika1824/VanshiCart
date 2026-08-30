@@ -52,6 +52,12 @@ class User(Base):
         default=True,
     )
 
+    role: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="customer",
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,

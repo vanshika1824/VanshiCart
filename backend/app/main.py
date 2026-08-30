@@ -42,8 +42,7 @@ from app.schemas.brand import BrandCreate, BrandResponse, BrandUpdate
 from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate
 from app.services.auth_service import hash_password, verify_password
 from app.services.jwt_service import create_access_token
-from app.services.security import get_current_user_id
-
+from app.services.security import get_current_admin, get_current_user_id
 
 app = FastAPI(
     title="VanshiCart API",
@@ -197,7 +196,7 @@ def update_product(
     product_id: int,
     product_data: ProductUpdate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     product = db.scalar(
         select(Product).where(
@@ -240,7 +239,7 @@ def update_product(
 def deactivate_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     product = db.scalar(
         select(Product).where(
@@ -1101,7 +1100,7 @@ def get_order(
 def create_category(
     category_data: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     existing_category = db.scalar(
         select(Category).where(Category.name == category_data.name)
@@ -1173,7 +1172,7 @@ def update_category(
     category_id: int,
     category_data: CategoryUpdate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     category = db.scalar(
         select(Category).where(
@@ -1217,7 +1216,7 @@ def update_category(
 def deactivate_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     category = db.scalar(
         select(Category).where(
@@ -1281,7 +1280,7 @@ def add_product_category(
     product_id: int,
     category_id: int,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     product = db.scalar(
         select(Product).where(
@@ -1338,7 +1337,7 @@ def remove_product_category(
     product_id: int,
     category_id: int,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     product_category = db.scalar(
         select(ProductCategory).where(
@@ -1371,7 +1370,7 @@ def remove_product_category(
 def create_brand(
     brand_data: BrandCreate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     existing_brand = db.scalar(
         select(Brand).where(Brand.name == brand_data.name)
@@ -1437,7 +1436,7 @@ def update_brand(
     brand_id: int,
     brand_data: BrandUpdate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     brand = db.scalar(
         select(Brand).where(Brand.brand_id == brand_id)
@@ -1496,6 +1495,7 @@ def register_user(
         phone_number=user_data.phone_number,
         profile_image=user_data.profile_image,
         is_active=True,
+        role="customer",
     )
 
     db.add(new_user)
@@ -1576,7 +1576,7 @@ def login_user(
 def create_product(
     product_data: ProductCreate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
+    current_user_id: int = Depends(get_current_admin),
 ):
     # Check that the brand exists if brand_id was provided
     if product_data.brand_id is not None:
