@@ -5,9 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-# Load variables from backend/.env
 load_dotenv()
-
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -17,8 +15,7 @@ if not DATABASE_URL:
     )
 
 
-# Render provides postgresql://...
-# Force SQLAlchemy to use Psycopg 3.
+# Use psycopg 3 explicitly
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace(
         "postgresql://",
@@ -27,14 +24,12 @@ if DATABASE_URL.startswith("postgresql://"):
     )
 
 
-# Database engine
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
 )
 
 
-# Database session factory
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
