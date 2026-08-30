@@ -39,6 +39,7 @@ Users can browse grocery products, filter products by category, search the catal
 - Browse products by category
 - Dynamic category navigation
 - Backend-powered category filtering
+<img width="727" height="362" alt="Screenshot 2026-08-30 205121" src="https://github.com/user-attachments/assets/6a2eb0c2-6379-41f2-a99a-80c82d8f649b" />
 
 ### 🛒 Shopping Cart
 - Add products to cart
@@ -47,12 +48,14 @@ Users can browse grocery products, filter products by category, search the catal
 - Automatic cart total calculation
 - Stock validation
 - Persistent cart for authenticated users
+<img width="960" height="504" alt="Screenshot 2026-08-30 205304" src="https://github.com/user-attachments/assets/f925e155-3e48-483e-8a36-0e0107e77545" />
 
 ### ❤️ Wishlist
 - Save products for later
 - View saved products
 - Remove products from wishlist
 - Product information retrieved from the backend
+<img width="960" height="504" alt="Screenshot 2026-08-30 205223" src="https://github.com/user-attachments/assets/9c4423d4-c8fd-4b03-9672-1f8ec5c59707" />
 
 ### 👤 Authentication
 - User registration
@@ -84,6 +87,7 @@ Users can browse grocery products, filter products by category, search the catal
 - Quantity and price
 - Payment method
 - Order total
+<img width="960" height="504" alt="Screenshot 2026-08-30 205337" src="https://github.com/user-attachments/assets/d2a5770e-448f-43e6-b049-a96a74de2ecd" />
 
 ### 📱 Responsive Design
 - Mobile-friendly layout
