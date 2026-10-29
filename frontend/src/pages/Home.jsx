@@ -19,32 +19,37 @@ export default function Home() {
         setLoading(true);
         setError("");
 
-        const [productsResponse, categoriesResponse] = await Promise.all([
+        const [productsResult, categoriesResult] = await Promise.allSettled([
           getProducts(),
           getCategories(),
         ]);
 
-        console.log("PRODUCTS API RESPONSE:", productsResponse.data);
-        console.log("CATEGORIES API RESPONSE:", categoriesResponse.data);
+        if (productsResult.status === "fulfilled") {
+          console.log("PRODUCTS API RESPONSE:", productsResult.value.data);
+          const productsData = Array.isArray(productsResult.value.data)
+            ? productsResult.value.data
+            : productsResult.value.data?.items || [];
+          setProducts(productsData);
+        } else {
+          console.error("PRODUCTS ERROR:", productsResult.reason);
+          setError(
+            productsResult.reason?.response?.data?.detail ||
+              "Unable to load products. Please check the backend."
+          );
+        }
 
-        const productsData = Array.isArray(productsResponse.data)
-          ? productsResponse.data
-          : productsResponse.data?.items || [];
-
-        const categoriesData = Array.isArray(categoriesResponse.data)
-          ? categoriesResponse.data
-          : categoriesResponse.data?.items || [];
-
-        setProducts(productsData);
-        setCategories(categoriesData);
+        if (categoriesResult.status === "fulfilled") {
+          console.log("CATEGORIES API RESPONSE:", categoriesResult.value.data);
+          const categoriesData = Array.isArray(categoriesResult.value.data)
+            ? categoriesResult.value.data
+            : categoriesResult.value.data?.items || [];
+          setCategories(categoriesData);
+        } else {
+          console.error("CATEGORIES ERROR:", categoriesResult.reason);
+          // Categories failing should not block the page
+        }
       } catch (err) {
         console.error("HOME DATA ERROR:", err);
-        console.error("ERROR RESPONSE:", err.response?.data);
-
-        setError(
-          err.response?.data?.detail ||
-            "Unable to load products. Please check the backend."
-        );
       } finally {
         setLoading(false);
       }
