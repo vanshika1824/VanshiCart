@@ -6,6 +6,10 @@ import {
   Minus,
   Trash2,
   ArrowRight,
+  ShieldCheck,
+  Truck,
+  Sparkles,
+  ArrowLeft,
 } from "lucide-react";
 
 import {
@@ -13,22 +17,20 @@ import {
   updateCartItem,
   removeCartItem,
 } from "../services/cartService";
-
 import { getProducts } from "../services/productService";
 
+import ImageWithFallback from "../components/ImageWithFallback";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useToast } from "../context/ToastContext";
 import { apiError } from "../services/api";
 
 export default function Cart() {
+  const toast = useToast();
   const [cart, setCart] = useState(null);
   const [products, setProducts] = useState([]);
-
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState("");
-
-  // --------------------------------------------------
-  // LOAD CART + PRODUCTS
-  // --------------------------------------------------
 
   const loadCart = async () => {
     try {
@@ -41,513 +43,346 @@ export default function Cart() {
       ]);
 
       const cartData = cartResponse?.data || {};
-
       const productsData = Array.isArray(productsResponse?.data)
         ? productsResponse.data
         : productsResponse?.data?.items || [];
 
       setCart(cartData);
       setProducts(productsData);
-
-      console.log("CART DATA:", cartData);
-      console.log("PRODUCTS DATA:", productsData);
     } catch (e) {
       console.error("CART LOAD ERROR:", e);
-
       setCart(null);
-
-      setError(
-        apiError(
-          e,
-          "Could not load your cart."
-        )
-      );
+      setError(apiError(e, "Could not load your cart."));
     } finally {
       setLoading(false);
     }
   };
 
-  // IMPORTANT:
-  // Do NOT use useEffect(loadCart, []) because loadCart is async.
   useEffect(() => {
     loadCart();
   }, []);
 
-  // --------------------------------------------------
-  // CART ITEMS
-  // --------------------------------------------------
-
-  const items =
-    cart?.items ||
-    cart?.cart_items ||
-    [];
-
-  // --------------------------------------------------
-  // FIND PRODUCT FROM PRODUCT ID
-  // --------------------------------------------------
+  const items = cart?.items || cart?.cart_items || [];
 
   const findProduct = (item) => {
     return products.find(
-      (product) =>
-        String(product.product_id) ===
-        String(item.product_id)
+      (product) => String(product.product_id) === String(item.product_id)
     );
   };
-
-  // --------------------------------------------------
-  // GET PRODUCT NAME
-  // --------------------------------------------------
 
   const getProductName = (item) => {
     const product = findProduct(item);
-
-    return (
-      product?.name ||
-      item.product_name ||
-      `Product #${item.product_id}`
-    );
+    return product?.name || item.product_name || `Product #${item.product_id}`;
   };
-
-  // --------------------------------------------------
-  // GET PRODUCT IMAGE
-  // --------------------------------------------------
 
   const getProductImage = (item) => {
     const product = findProduct(item);
-
-    return (
-      product?.image_url ||
-      product?.image ||
-      product?.imageUrl ||
-      ""
-    );
+    return product?.image_url || product?.image || "";
   };
-
-  // --------------------------------------------------
-  // GET PRODUCT PRICE
-  // --------------------------------------------------
 
   const getProductPrice = (item) => {
     const product = findProduct(item);
-
     return Number(
-      item.price ||
-      item.selling_price ||
-      product?.selling_price ||
-      0
+      item.price || item.selling_price || product?.selling_price || 0
     );
   };
 
-  // --------------------------------------------------
-  // CALCULATE TOTAL
-  // --------------------------------------------------
+  const getOriginalPrice = (item) => {
+    const product = findProduct(item);
+    return Number(product?.original_price || getProductPrice(item));
+  };
 
-  const total = items.reduce(
-    (sum, item) => {
-      const price = getProductPrice(item);
-      const quantity = Number(item.quantity || 1);
+  const total = items.reduce((sum, item) => {
+    const price = getProductPrice(item);
+    const quantity = Number(item.quantity || 1);
+    return sum + price * quantity;
+  }, 0);
 
-      return sum + price * quantity;
-    },
-    0
-  );
+  const originalTotal = items.reduce((sum, item) => {
+    const price = getOriginalPrice(item);
+    const quantity = Number(item.quantity || 1);
+    return sum + price * quantity;
+  }, 0);
 
-  // --------------------------------------------------
-  // CHANGE QUANTITY
-  // --------------------------------------------------
+  const totalSavings = originalTotal > total ? originalTotal - total : 0;
+  const deliveryFee = 0;
+  const finalPayable = total + deliveryFee;
 
   const changeQuantity = async (item, newQuantity) => {
     if (newQuantity < 1) return;
-
     try {
-      await updateCartItem(
-        item.cart_item_id,
-        {
-          quantity: newQuantity,
-        }
-      );
-
+      setUpdatingId(item.cart_item_id);
+      await updateCartItem(item.cart_item_id, {
+        quantity: newQuantity,
+      });
+      window.dispatchEvent(new Event("cart-updated"));
       await loadCart();
     } catch (e) {
-      console.error(
-        "UPDATE CART ITEM ERROR:",
-        e
-      );
-
-      alert(
-        apiError(
-          e,
-          "Could not update quantity."
-        )
-      );
+      toast.error(apiError(e, "Could not update quantity."));
+    } finally {
+      setUpdatingId(null);
     }
   };
-
-  // --------------------------------------------------
-  // REMOVE ITEM
-  // --------------------------------------------------
 
   const removeItem = async (item) => {
     try {
-      await removeCartItem(
-        item.cart_item_id
-      );
-
+      setUpdatingId(item.cart_item_id);
+      await removeCartItem(item.cart_item_id);
+      window.dispatchEvent(new Event("cart-updated"));
+      toast.info("Item removed from cart.");
       await loadCart();
     } catch (e) {
-      console.error(
-        "REMOVE CART ITEM ERROR:",
-        e
-      );
-
-      alert(
-        apiError(
-          e,
-          "Could not remove item."
-        )
-      );
+      toast.error(apiError(e, "Could not remove item."));
+    } finally {
+      setUpdatingId(null);
     }
   };
 
-  // --------------------------------------------------
-  // LOADING
-  // --------------------------------------------------
-
   if (loading) {
     return (
-      <div className="container-page py-10">
+      <div className="container-page py-20 flex justify-center">
         <LoadingSpinner />
       </div>
     );
   }
 
-  // --------------------------------------------------
-  // ERROR
-  // --------------------------------------------------
-
   if (error) {
     return (
-      <div className="container-page py-10">
-
-        <div className="card p-8 text-center">
-
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
-            <ShoppingCart size={30} />
+      <div className="container-page py-16">
+        <div className="card max-w-md mx-auto p-8 text-center bg-red-50/40 border-red-200">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600">
+            <ShoppingCart size={28} />
           </div>
-
-          <h1 className="mt-5 text-2xl font-black">
+          <h2 className="mt-4 text-xl font-black text-slate-900">
             Could not load your cart
-          </h1>
-
-          <p className="mt-2 text-slate-500">
-            {error}
-          </p>
-
-          <button
-            onClick={loadCart}
-            className="btn-primary mt-5"
-          >
-            Try again
+          </h2>
+          <p className="mt-2 text-xs sm:text-sm text-slate-600">{error}</p>
+          <button onClick={loadCart} className="btn-primary mt-6">
+            Try Again
           </button>
-
-          <div className="mt-4">
-            <Link
-              to="/products"
-              className="text-sm font-semibold text-brand-700 hover:underline"
-            >
-              Continue shopping
-            </Link>
-          </div>
-
         </div>
-
       </div>
     );
   }
-
-  // --------------------------------------------------
-  // EMPTY CART
-  // --------------------------------------------------
 
   if (!items.length) {
     return (
-      <div className="container-page py-10">
-
-        <p className="text-sm font-bold text-brand-600">
-          SHOPPING CART
-        </p>
-
-        <h1 className="mt-1 text-3xl font-black">
-          Your cart
-        </h1>
-
-        <div className="card mt-7 p-10 text-center">
-
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-            <ShoppingCart size={38} />
+      <div className="container-page py-16 sm:py-24">
+        <div className="card max-w-lg mx-auto p-8 sm:p-12 text-center shadow-card-hover">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-50 text-brand-700">
+            <ShoppingCart size={38} strokeWidth={1.75} />
           </div>
-
-          <h2 className="mt-5 text-xl font-black">
-            Your cart is empty
+          <h2 className="mt-6 text-2xl font-black text-slate-900">
+            Your Cart is Empty
           </h2>
-
-          <p className="mt-2 text-slate-500">
-            Add some products to your cart and they will appear here.
+          <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+            Looks like you haven't added any fresh groceries to your cart yet.
+            Explore our daily harvest!
           </p>
-
-          <Link
-            to="/products"
-            className="btn-primary mt-5 inline-flex items-center gap-2"
-          >
-            Start shopping
-            <ArrowRight size={17} />
-          </Link>
-
+          <div className="mt-8 flex justify-center">
+            <Link to="/products" className="btn-primary">
+              <span>Start Grocery Shopping</span>
+              <ArrowRight size={17} />
+            </Link>
+          </div>
         </div>
-
       </div>
     );
   }
 
-  // --------------------------------------------------
-  // MAIN CART
-  // --------------------------------------------------
-
   return (
-    <div className="container-page py-10">
-
+    <div className="container-page py-8 sm:py-12">
       {/* HEADER */}
-
-      <div>
-        <p className="text-sm font-bold text-brand-600">
-          SHOPPING CART
-        </p>
-
-        <h1 className="mt-1 text-3xl font-black">
-          Your cart
-        </h1>
-
-        <p className="mt-2 text-slate-500">
-          Review your items before checkout.
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-700">
+            <ShoppingCart size={13} />
+            <span>Shopping Cart</span>
+          </div>
+          <h1 className="mt-1 text-3xl font-black text-slate-900 tracking-tight">
+            Review Your Basket ({items.length} items)
+          </h1>
+        </div>
+        <Link
+          to="/products"
+          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-700 hover:text-brand-800"
+        >
+          <ArrowLeft size={16} />
+          <span>Continue Shopping</span>
+        </Link>
       </div>
 
-      {/* CART */}
+      {/* DELIVERY INFO BANNER */}
+      <div className="mb-8 rounded-2xl border border-brand-200/80 bg-brand-50/70 p-4 shadow-subtle flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+          <Truck size={20} />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-brand-900">
+            Standard Delivery Available
+          </p>
+          <p className="text-[11px] text-brand-700/80">
+            All orders qualify for standard doorstep delivery.
+          </p>
+        </div>
+      </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
-
-        {/* ITEMS */}
-
-        <div className="space-y-4">
-
+      {/* MAIN TWO COLUMN LAYOUT */}
+      <div className="grid gap-8 lg:grid-cols-12 items-start">
+        {/* LEFT COLUMN: ITEM LIST */}
+        <div className="space-y-4 lg:col-span-8">
           {items.map((item, index) => {
-
-            const name =
-              getProductName(item);
-
-            const image =
-              getProductImage(item);
-
-            const price =
-              getProductPrice(item);
-
-            const quantity =
-              Number(item.quantity || 1);
+            const name = getProductName(item);
+            const image = getProductImage(item);
+            const price = getProductPrice(item);
+            const originalPrice = getOriginalPrice(item);
+            const quantity = Number(item.quantity || 1);
+            const isUpdating = updatingId === item.cart_item_id;
 
             return (
               <div
-                key={
-                  item.cart_item_id ||
-                  index
-                }
-                className="card overflow-hidden p-4"
+                key={item.cart_item_id || index}
+                className="group flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-card hover:border-slate-300 transition-all"
               >
-
-                <div className="flex gap-4">
-
-                  {/* IMAGE */}
-
-                  <div className="h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-
-                    {image ? (
-                      <img
-                        src={image}
-                        alt={name}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display =
-                            "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-4xl">
-                        🥬
-                      </div>
-                    )}
-
+                {/* ITEM IMAGE & TITLE */}
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-slate-50 border border-slate-100">
+                    <ImageWithFallback
+                      src={image}
+                      alt={name}
+                      productName={name}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
 
-                  {/* DETAILS */}
-
                   <div className="min-w-0 flex-1">
-
                     <Link
                       to={`/products/${item.product_id}`}
-                      className="font-black hover:text-brand-600"
+                      className="text-sm sm:text-base font-bold text-slate-900 hover:text-brand-700 transition line-clamp-1"
                     >
                       {name}
                     </Link>
 
-                    <p className="mt-1 text-sm text-slate-500">
-                      ₹{price.toFixed(2)} each
-                    </p>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-3">
-
-                      {/* QUANTITY */}
-
-                      <div className="flex items-center rounded-xl border border-slate-200 bg-white">
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            changeQuantity(
-                              item,
-                              Math.max(
-                                1,
-                                quantity - 1
-                              )
-                            )
-                          }
-                          className="p-2 text-slate-600 hover:bg-slate-50"
-                        >
-                          <Minus size={16} />
-                        </button>
-
-                        <span className="min-w-8 text-center text-sm font-bold">
-                          {quantity}
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="text-sm font-black text-slate-800">
+                        ₹{price.toFixed(2)}
+                      </span>
+                      {originalPrice > price && (
+                        <span className="text-xs text-slate-400 line-through">
+                          ₹{originalPrice.toFixed(2)}
                         </span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            changeQuantity(
-                              item,
-                              quantity + 1
-                            )
-                          }
-                          className="p-2 text-slate-600 hover:bg-slate-50"
-                        >
-                          <Plus size={16} />
-                        </button>
-
-                      </div>
-
-                      {/* REMOVE */}
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          removeItem(item)
-                        }
-                        className="inline-flex items-center gap-1.5 text-sm font-bold text-red-600 hover:underline"
-                      >
-                        <Trash2 size={15} />
-                        Remove
-                      </button>
-
+                      )}
+                      <span className="text-xs text-slate-400">/ unit</span>
                     </div>
 
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => removeItem(item)}
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-700 transition"
+                    >
+                      <Trash2 size={13} />
+                      <span>Remove</span>
+                    </button>
                   </div>
-
-                  {/* ITEM TOTAL */}
-
-                  <div className="shrink-0 text-right">
-
-                    <p className="font-black">
-                      ₹{(
-                        price *
-                        quantity
-                      ).toFixed(2)}
-                    </p>
-
-                  </div>
-
                 </div>
 
+                {/* QUANTITY PICKER & ITEM TOTAL */}
+                <div className="flex items-center justify-between w-full sm:w-auto sm:justify-end gap-6 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                  {/* QUANTITY CONTROLLER */}
+                  <div className="flex items-center rounded-xl border border-slate-200 bg-white p-0.5 shadow-subtle">
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => changeQuantity(item, quantity - 1)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 transition"
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <span className="min-w-8 text-center text-xs font-bold text-slate-800">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isUpdating}
+                      onClick={() => changeQuantity(item, quantity + 1)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 transition"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+
+                  {/* ITEM TOTAL PRICE */}
+                  <div className="text-right sm:min-w-24">
+                    <span className="text-base font-black text-slate-900">
+                      ₹{(price * quantity).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
             );
           })}
-
         </div>
 
-        {/* SUMMARY */}
+        {/* RIGHT COLUMN: ORDER SUMMARY */}
+        <div className="lg:col-span-4 sticky top-24">
+          <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-card">
+            <h2 className="text-lg font-black text-slate-900">Order Summary</h2>
 
-        <div className="card h-fit p-6">
-
-          <h2 className="text-xl font-black">
-            Order summary
-          </h2>
-
-          <div className="mt-5 space-y-3 text-sm">
-
-            <div className="flex justify-between">
-              <span className="text-slate-500">
-                Items
-              </span>
-
-              <span className="font-semibold">
-                {items.length}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-slate-500">
-                Subtotal
-              </span>
-
-              <span className="font-semibold">
-                ₹{total.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="border-t border-slate-200 pt-4">
-
+            <div className="mt-5 space-y-3.5 text-sm text-slate-600">
               <div className="flex justify-between">
-
-                <span className="font-black">
-                  Total
-                </span>
-
-                <span className="text-lg font-black">
+                <span>Items Subtotal</span>
+                <span className="font-bold text-slate-800">
                   ₹{total.toFixed(2)}
                 </span>
-
               </div>
 
+              {totalSavings > 0 && (
+                <div className="flex justify-between text-brand-700 font-semibold">
+                  <span>Product Discount</span>
+                  <span>- ₹{totalSavings.toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between">
+                <span>Doorstep Delivery</span>
+                <span className="font-bold text-brand-700">FREE</span>
+              </div>
+
+              <div className="border-t border-slate-200 pt-4">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <span className="text-base font-black text-slate-900">
+                      Total Payable
+                    </span>
+                    <p className="text-[11px] text-slate-400">
+                      Inclusive of all taxes
+                    </p>
+                  </div>
+                  <span className="text-2xl font-black text-slate-900">
+                    ₹{finalPayable.toFixed(2)}
+                  </span>
+                </div>
+              </div>
             </div>
 
+            <Link
+              to="/checkout"
+              className="btn-primary mt-6 w-full py-3.5 text-base shadow-card-hover"
+            >
+              <span>Proceed to Checkout</span>
+              <ArrowRight size={18} />
+            </Link>
+
+            <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-slate-400">
+              <ShieldCheck size={16} className="text-brand-600" />
+              <span>Safe & Simple Checkout</span>
+            </div>
           </div>
-
-          <Link
-            to="/checkout"
-            className="btn-primary mt-6 flex w-full items-center justify-center gap-2"
-          >
-            Proceed to checkout
-            <ArrowRight size={17} />
-          </Link>
-
-          <Link
-            to="/products"
-            className="mt-4 block text-center text-sm font-semibold text-slate-500 hover:text-brand-600"
-          >
-            Continue shopping
-          </Link>
-
         </div>
-
       </div>
-
     </div>
   );
 }
