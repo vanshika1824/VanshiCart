@@ -198,7 +198,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#f0f9f4] via-[#f7fbf8] to-transparent pt-8 sm:pt-10 md:pt-12 lg:pt-14 pb-12 sm:pb-16">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#f0f9f4] via-[#f7fbf8] to-transparent pt-3 sm:pt-4 md:pt-5 lg:pt-6 pb-10 sm:pb-12 md:pb-14">
         {/* Subtle decorative background blur */}
         <div className="absolute top-2 left-1/2 -translate-x-1/2 -z-10 h-64 w-full max-w-7xl opacity-40 blur-3xl pointer-events-none">
           <div className="h-full w-full bg-gradient-to-r from-emerald-200 via-brand-100 to-amber-100 rounded-full" />
@@ -372,8 +372,9 @@ export default function Home() {
               >
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-xl bg-slate-50">
                   <ImageWithFallback
-                    src={visual.image}
+                    src={cat.image_url || visual.image}
                     alt={cat.name}
+                    categoryName={cat.name}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-108"
                   />
                 </div>

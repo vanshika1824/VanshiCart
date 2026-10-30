@@ -259,6 +259,7 @@ export default function ProductDetails() {
                 src={product.image_url}
                 alt={product.name}
                 productName={product.name}
+                categoryName={product.category_name}
                 className="h-full w-full object-cover transition duration-500 hover:scale-105"
               />
             </div>

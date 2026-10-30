@@ -56,6 +56,7 @@ export default function ProductCard({
             src={product.image_url}
             alt={product.name}
             productName={product.name}
+            categoryName={product.category_name}
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         </Link>
