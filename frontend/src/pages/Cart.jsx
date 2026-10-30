@@ -21,10 +21,12 @@ import { getProducts } from "../services/productService";
 
 import ImageWithFallback from "../components/ImageWithFallback";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { apiError } from "../services/api";
 
 export default function Cart() {
+  const { user } = useAuth();
   const toast = useToast();
   const [cart, setCart] = useState(null);
   const [products, setProducts] = useState([]);
@@ -33,6 +35,11 @@ export default function Cart() {
   const [error, setError] = useState("");
 
   const loadCart = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -142,6 +149,33 @@ export default function Cart() {
     return (
       <div className="container-page py-20 flex justify-center">
         <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="container-page py-16 sm:py-24">
+        <div className="card max-w-lg mx-auto p-8 sm:p-12 text-center shadow-card-hover">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-50 text-brand-700">
+            <ShoppingCart size={38} strokeWidth={1.75} />
+          </div>
+          <h2 className="mt-6 text-2xl font-black text-slate-900">
+            Sign In to View Your Cart
+          </h2>
+          <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+            Please log in with your VanshiCart account to access your saved grocery items and proceed to checkout.
+          </p>
+          <div className="mt-8 flex justify-center gap-3">
+            <Link to="/login" className="btn-primary">
+              <span>Sign In</span>
+              <ArrowRight size={17} />
+            </Link>
+            <Link to="/register" className="btn-secondary">
+              Create Account
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

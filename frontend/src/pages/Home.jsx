@@ -198,13 +198,13 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#f0f9f4] via-[#f7fbf8] to-transparent py-12 md:py-20 lg:py-24">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#f0f9f4] via-[#f7fbf8] to-transparent pt-8 sm:pt-10 md:pt-12 lg:pt-14 pb-12 sm:pb-16">
         {/* Subtle decorative background blur */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 -z-10 h-72 w-full max-w-7xl opacity-40 blur-3xl pointer-events-none">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 -z-10 h-64 w-full max-w-7xl opacity-40 blur-3xl pointer-events-none">
           <div className="h-full w-full bg-gradient-to-r from-emerald-200 via-brand-100 to-amber-100 rounded-full" />
         </div>
 
-        <div className="container-page grid gap-12 lg:grid-cols-12 lg:items-center">
+        <div className="container-page grid gap-8 lg:gap-12 lg:grid-cols-12 lg:items-center">
           {/* LEFT HERO COPY */}
           <div className="lg:col-span-7">
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-white px-3.5 py-1.5 text-xs font-bold text-brand-800 shadow-subtle">
@@ -212,7 +212,7 @@ export default function Home() {
               <span>Smart Everyday Grocery Shopping</span>
             </div>
 
-            <h1 className="mt-5 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-[1.12]">
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-[1.12]">
               Fresh farm food,
               <br />
               <span className="bg-gradient-to-r from-brand-700 to-brand-500 bg-clip-text text-transparent">
@@ -220,7 +220,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="mt-5 max-w-xl text-base sm:text-lg leading-relaxed text-slate-600">
+            <p className="mt-4 max-w-xl text-sm sm:text-base lg:text-lg leading-relaxed text-slate-600">
               Crisp seasonal fruits, tender greens, wholesome dairy, and kitchen
               essentials. Handpicked with care and brought straight to your table.
             </p>
@@ -228,7 +228,7 @@ export default function Home() {
             {/* HERO SEARCH BAR */}
             <form
               onSubmit={handleSearch}
-              className="mt-8 flex max-w-xl items-center rounded-2xl border border-slate-200 bg-white p-2 shadow-card-hover transition-all focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10"
+              className="mt-6 flex max-w-xl items-center rounded-2xl border border-slate-200 bg-white p-2 shadow-card-hover transition-all focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-500/10"
             >
               <Search size={20} className="ml-3 text-slate-400 shrink-0" />
               <input
@@ -247,7 +247,7 @@ export default function Home() {
             </form>
 
             {/* TRUST BADGES & CTA */}
-            <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
               <span className="flex items-center gap-1.5 text-brand-800">
                 <CheckCircle2 size={16} className="text-brand-600" />
                 100% Quality Checked
@@ -262,7 +262,7 @@ export default function Home() {
               </span>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link to="/products" className="btn-primary">
                 Explore Full Catalog
                 <ArrowRight size={17} />
@@ -275,9 +275,9 @@ export default function Home() {
 
           {/* RIGHT HERO VISUAL COMPOSITION */}
           <div className="lg:col-span-5">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
-              {/* MAIN HERO CARD */}
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-card-hover p-3 sm:p-4">
+            <div className="mx-auto max-w-md lg:max-w-none">
+              {/* CLEAN STRUCTURED HERO CARD */}
+              <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-card hover:border-slate-300 transition-all duration-300 p-3 sm:p-4">
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-emerald-50">
                   <ImageWithFallback
                     src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=80"
@@ -286,7 +286,7 @@ export default function Home() {
                   />
                 </div>
 
-                <div className="p-4 pt-5">
+                <div className="p-4 pt-4 sm:pt-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="inline-block rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700">
@@ -298,40 +298,17 @@ export default function Home() {
                     </div>
                     <Link
                       to="/products"
-                      className="rounded-xl bg-brand-600 p-2.5 text-white shadow-sm hover:bg-brand-700 transition"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm hover:bg-brand-700 transition"
                       aria-label="Shop harvest"
                     >
                       <ArrowRight size={18} />
                     </Link>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-500">
                     Hand-selected crispy apples, fresh milk, and daily essentials
                     from trusted suppliers.
                   </p>
                 </div>
-              </div>
-
-              {/* FLOATING PERK BADGE */}
-              <div className="absolute -bottom-5 -left-4 hidden sm:flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-md p-3.5 shadow-dropdown animate-in fade-in">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 font-bold">
-                  <Truck size={22} />
-                </div>
-                <div>
-                  <div className="text-xs font-black text-slate-900">
-                    Doorstep Delivery
-                  </div>
-                  <div className="text-[11px] text-slate-500">
-                    Direct to your kitchen
-                  </div>
-                </div>
-              </div>
-
-              {/* FLOATING FRESHNESS BADGE */}
-              <div className="absolute -top-4 -right-3 hidden sm:flex items-center gap-2 rounded-2xl border border-brand-200 bg-brand-50 px-3.5 py-2 shadow-subtle">
-                <span className="flex h-2 w-2 rounded-full bg-brand-600 animate-ping" />
-                <span className="text-xs font-bold text-brand-800">
-                  Live Stock Available
-                </span>
               </div>
             </div>
           </div>
